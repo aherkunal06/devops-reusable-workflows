@@ -3,9 +3,6 @@ name: Node Blog Reusable CICD
 on:
   workflow_call:
     inputs:
-      run_dev:
-        type: boolean
-        default: false
       run_sonar:
         type: boolean
         default: false
@@ -18,7 +15,7 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -54,11 +51,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Deploy to cPanel
         run: |
           rsync -avz --delete ./ \
           ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ inputs.deploy_path }}
-
