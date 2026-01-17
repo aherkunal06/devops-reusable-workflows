@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    runs-on: [self-hosted, dev]
+    runs-on: self-hosted
 
     steps:
       - name: Checkout code
@@ -40,20 +40,25 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           sonar-scanner \
-          -Dsonar.projectKey=blog-nodejs \
+          -Dsonar.projectKey=${{ github.repository }} \
           -Dsonar.sources=. \
           -Dsonar.host.url=$SONAR_HOST_URL \
           -Dsonar.login=$SONAR_TOKEN
 
-  
+      - name: Build App
+        run: npm run build
 
   deploy:
     if: github.ref == 'refs/heads/main'
     needs: build
-    runs-on: [self-hosted, prod]
+    runs-on: self-hosted
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Deploy to cPanel
         run: |
           rsync -avz --delete ./ \
           ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ inputs.deploy_path }}
+
