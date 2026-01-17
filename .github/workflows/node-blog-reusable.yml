@@ -1,0 +1,61 @@
+name: Node Blog Reusable CICD
+
+on:
+  workflow_call:
+    inputs:
+      run_dev:
+        type: boolean
+        default: false
+      run_sonar:
+        type: boolean
+        default: false
+      deploy_path:
+        type: string
+        required: false
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        if: inputs.run_sonar == true
+        run: npm test
+
+      - name: SonarQube Scan
+        if: inputs.run_sonar == true
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          sonar-scanner \
+          -Dsonar.projectKey=blog-nodejs \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.login=$SONAR_TOKEN
+
+      - name: Run Dev Server
+        if: inputs.run_dev == true
+        run: npm run dev
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: [self-hosted, prod]
+
+    steps:
+      - name: Deploy to cPanel
+        run: |
+          rsync -avz --delete ./ \
+          ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ inputs.deploy_path }}
