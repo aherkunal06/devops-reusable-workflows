@@ -45,9 +45,7 @@ jobs:
           -Dsonar.host.url=$SONAR_HOST_URL \
           -Dsonar.login=$SONAR_TOKEN
 
-      - name: Run Dev Server
-        if: inputs.run_dev == true
-        run: npm run dev
+  
 
   deploy:
     if: github.ref == 'refs/heads/main'
