@@ -12,7 +12,8 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    # Dev + Test runner
+    runs-on: [self-hosted, dev]
 
     steps:
       - name: Checkout
@@ -37,18 +38,20 @@ jobs:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           sonar-scanner \
-          -Dsonar.projectKey=${{ github.repository }} \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=$SONAR_HOST_URL \
-          -Dsonar.login=$SONAR_TOKEN
+            -Dsonar.projectKey=${{ github.repository }} \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
 
       - name: Build App
         run: npm run build
 
   deploy:
+    # Only runs when caller is main branch (condition evaluated here)
     if: github.ref == 'refs/heads/main'
     needs: build
-    runs-on: self-hosted
+    # Prod runner
+    runs-on: [self-hosted, prod]
 
     steps:
       - name: Checkout
